@@ -1,58 +1,88 @@
 const input=document.querySelector(".message-input")
 const btn=document.querySelector(".submit-btn")
 const list=document.querySelector(".message-list")
-const li=document.createElement('li');
-const debtn=document.createElement('button');
-const span=document.createElement('span');
-const editbtn=document.createElement("button");
-if(btn){
-        btn.addEventListener('click',()=>{
-        const text= input.value.trim();
-        if(!text) return;
-        li.classList.add('message-item');
-        li.appendChild(span);
-        li.appendChild(editbtn);        
-        li.appendChild(debtn);
-        list.appendChild(li); 
 
-        input.value='';
+let messages=JSON.parse(localStorage.getItem("message")) || [];
 
-        
-        span.textContent=text;
-        debtn.textContent="X";
-        editbtn.textContent="Edit";        
-        debtn.addEventListener('click',()=>{
-          li.remove();
-          debtn.remove();
-        })
-        editbtn.addEventListener("click",()=>{
-          const inputEdit=document.createElement("input");
-          inputEdit.type="text";
-          inputEdit.value=span.textContent;
-          inputEdit.classList.add("edit-input");
-          const saveBtn=document.createElement("button");
-          saveBtn.textContent="Save";
+const saveToLocal = () => {
+  localStorage.setItem("message",JSON.stringify(messages))
+};
 
-          li.replaceChild(inputEdit,span);
-          li.replaceChild(saveBtn,editbtn);
-          inputEdit.focus();
+const renderMessages = () => {
+  list.innerHTML = "";
 
-          inputEdit.addEventListener("keydown",(e)=>{
-            if(e.key==="Enter"){
-             save();
-            }
-          });
+  messages.forEach((msg) =>{ 
+    const li = document.createElement("li");
+    li.classList.add("message-item");
 
-        const save = () => {
-          const newText=inputEdit.value.trim();
-          if(newText){
-            span.textContent=newText;
-          }
-          li.replaceChild(span,inputEdit);
-          li.replaceChild(editbtn,saveBtn)
-        };
+    const span = document.createElement("span");
+    span.textContent=msg.text;
+  
+    const debtn = document.createElement("button");
+    debtn.textContent="刪除";
+  
+  
+    const editbtn= document.createElement("button");
+    editbtn.textContent= "編輯";
+  
+    li.appendChild(span);
+    li.appendChild(editbtn);
+    li.appendChild(debtn);
+    list.appendChild(li);
+    debtn.addEventListener("click", () => {
+    messages = messages.filter((m) => m.id !== msg.id);
+    saveToLocal();
+    renderMessages();
+    })
 
-        saveBtn.addEventListener("click",save);
+  editbtn.addEventListener("click", () => {
+    const inputEdit = document.createElement("input");
+    inputEdit.type = "text";
+    inputEdit.value = span.textContent;
+    inputEdit.classList.add("edit-input");
+  
 
-        })
-})}
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent="儲存";
+      
+      li.replaceChild(inputEdit, span);
+      li.replaceChild(saveBtn, editbtn);
+      inputEdit.focus();
+    
+    const save = () => {
+      const newText = inputEdit.value.trim();
+      if (newText) {
+        msg.text = newText;
+        saveToLocal();
+        renderMessages();
+      }
+    };
+    
+    inputEdit.addEventListener("keydown", (e) => {
+      if (e.key==="Enter") {
+        save();
+      }
+    });
+    saveBtn.addEventListener("click", save)
+  
+});
+});
+};
+
+btn.addEventListener("click", () => {
+  
+  const text = input.value.trim();
+  if (!text) return;
+
+  const newMessage = {
+    id: Date.now(),
+    text,
+  };
+  messages.push(newMessage);
+  saveToLocal();
+  renderMessages();
+
+  input.value= "";
+});
+  
+renderMessages();
